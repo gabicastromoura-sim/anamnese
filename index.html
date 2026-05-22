@@ -1,1 +1,667 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anamnese Inteligente · Método SIM · Gabi Andrioli</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+:root {
+  --sage: #5a7a5e;
+  --sage-light: #eef4ee;
+  --sage-mid: #8aab8e;
+  --earth-light: #f7f0e6;
+  --stone: #6b6b60;
+  --parchment: #faf8f3;
+  --cream: #f5f2ec;
+  --ink: #2a2a24;
+  --ink-mid: #5a5a50;
+  --ink-light: #9a9a8e;
+  --border: #e0ddd4;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: var(--parchment); }
+body {
+  font-family: 'DM Sans', sans-serif;
+  color: var(--ink);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+.container { width: 100%; max-width: 640px; }
+
+.screen { display: none; animation: rise 0.4s ease; }
+.screen.active { display: block; }
+@keyframes rise { from { opacity:0; transform:translateY(10px); } to { opacity:1; } }
+
+.logo-mark {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 13px; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--sage); margin-bottom: 6px;
+}
+.screen-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px; font-weight: 400; color: var(--ink);
+  line-height: 1.2; margin-bottom: 6px;
+}
+.screen-sub { font-size: 13px; color: var(--ink-mid); line-height: 1.6; margin-bottom: 1.5rem; }
+.divider { height: 0.5px; background: var(--border); margin: 1.5rem 0; }
+
+.notice-box {
+  background: var(--sage-light); border-radius: 10px;
+  padding: 12px 16px; font-size: 12.5px; color: var(--stone);
+  line-height: 1.6; margin-bottom: 1.5rem; border: 0.5px solid #c8deca;
+}
+.notice-box strong { color: var(--sage); }
+
+.field-lbl {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--ink-light); margin-bottom: 6px; display: block;
+}
+input[type=text], select, input[type=email] {
+  width: 100%; border: 0.5px solid var(--border); border-radius: 8px;
+  padding: 10px 14px; font-size: 14px; font-family: 'DM Sans', sans-serif;
+  background: white; color: var(--ink); transition: border-color 0.15s;
+}
+input[type=text]:focus, select:focus, input[type=email]:focus {
+  outline: none; border-color: var(--sage-mid);
+}
+.setup-row { margin-bottom: 14px; }
+.setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+
+.btn-primary {
+  background: var(--sage); color: white; border: none; border-radius: 8px;
+  padding: 12px 28px; font-size: 14px; font-family: 'DM Sans', sans-serif;
+  font-weight: 500; cursor: pointer; width: 100%; letter-spacing: 0.02em;
+  transition: background 0.15s, transform 0.1s; margin-top: 6px;
+}
+.btn-primary:hover { background: #4a6a4e; }
+.btn-primary:active { transform: scale(0.99); }
+.err { font-size: 12px; color: #c0392b; margin-top: 6px; display: none; }
+
+/* chat */
+.chat-header {
+  display: flex; align-items: center; gap: 12px;
+  padding-bottom: 1.2rem; border-bottom: 0.5px solid var(--border); margin-bottom: 1rem;
+}
+.avatar-ring {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: var(--sage-light); border: 1px solid #c8deca;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; color: var(--sage); flex-shrink: 0;
+}
+.chat-head-info h2 { font-family: 'Cormorant Garamond', serif; font-size: 16px; font-weight: 500; }
+.chat-head-info p { font-size: 11.5px; color: var(--ink-mid); }
+
+.prog-track { background: var(--cream); border-radius: 99px; height: 2px; margin-bottom: 4px; overflow: hidden; }
+.prog-bar { height: 100%; background: var(--sage); border-radius: 99px; transition: width 0.5s ease; }
+.prog-txt { font-size: 11px; color: var(--ink-light); text-align: right; margin-bottom: 1.2rem; }
+
+.msgs { display: flex; flex-direction: column; gap: 12px; margin-bottom: 1rem; min-height: 220px; }
+.msg { display: flex; gap: 8px; align-items: flex-start; animation: rise 0.3s ease; }
+.msg.user { flex-direction: row-reverse; }
+.mavt {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--cream); border: 0.5px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; color: var(--ink-mid); flex-shrink: 0;
+}
+.mbub {
+  max-width: 86%; padding: 10px 14px; border-radius: 12px;
+  font-size: 13.5px; line-height: 1.7; border: 0.5px solid var(--border);
+  background: white; color: var(--ink);
+}
+.msg.user .mbub { background: var(--sage-light); border-color: #c8deca; }
+.typing { display: flex; gap: 5px; align-items: center; padding: 12px 14px; }
+.dot { width: 5px; height: 5px; border-radius: 50%; background: var(--sage-mid); animation: bounce 1.2s infinite; }
+.dot:nth-child(2) { animation-delay: 0.2s; }
+.dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-5px)} }
+
+.input-row { display: flex; gap: 8px; align-items: flex-end; }
+.input-row textarea {
+  flex: 1; min-height: 44px; max-height: 110px; resize: none;
+  font-size: 13.5px; padding: 10px 14px; border: 0.5px solid var(--border);
+  border-radius: 10px; font-family: 'DM Sans', sans-serif; background: white;
+  color: var(--ink); line-height: 1.5; transition: border-color 0.15s;
+}
+.input-row textarea:focus { outline: none; border-color: var(--sage-mid); }
+.btn-send {
+  width: 44px; height: 44px; border-radius: 10px;
+  background: var(--sage); color: white; border: none; cursor: pointer;
+  font-size: 18px; display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s; flex-shrink: 0;
+}
+.btn-send:hover { background: #4a6a4e; }
+.btn-send:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* report */
+.rep-top { margin-bottom: 1.5rem; }
+.rep-top h1 { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 400; }
+.rep-top p { font-size: 12px; color: var(--ink-mid); margin-top: 4px; }
+.rep-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.btn-outline {
+  background: transparent; border: 0.5px solid var(--border); border-radius: 8px;
+  padding: 7px 14px; font-size: 12px; font-family: 'DM Sans', sans-serif;
+  cursor: pointer; color: var(--ink-mid); transition: background 0.15s;
+}
+.btn-outline:hover { background: var(--cream); }
+
+.sec-lbl {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--ink-light); display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+}
+.sec-lbl::after { content:''; flex:1; height:0.5px; background: var(--border); }
+
+.narrative {
+  background: var(--earth-light); border-radius: 12px;
+  padding: 1.1rem 1.3rem; font-size: 13.5px; line-height: 1.8;
+  color: var(--ink); border: 0.5px solid #e0d4c0; margin-bottom: 1.5rem; font-style: italic;
+}
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1.5rem; }
+.fc { background: white; border: 0.5px solid var(--border); border-radius: 8px; padding: 10px 13px; }
+.fc.wide { grid-column: 1/-1; }
+.fc-l { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-light); margin-bottom: 3px; }
+.fc-v { font-size: 13px; color: var(--ink); line-height: 1.45; }
+
+.send-status {
+  border-radius: 10px; padding: 12px 16px; font-size: 13px;
+  line-height: 1.5; margin-bottom: 1rem; text-align: center;
+}
+.send-status.sending { background: var(--sage-light); color: var(--sage); border: 0.5px solid #c8deca; }
+.send-status.success { background: #eafaf1; color: #27ae60; border: 0.5px solid #a9dfbf; }
+.send-status.error { background: #fdf2f2; color: #c0392b; border: 0.5px solid #f5b7b1; }
+
+.btn-new {
+  width: 100%; background: transparent; border: 0.5px solid var(--border);
+  border-radius: 8px; padding: 10px; font-size: 13px; font-family: 'DM Sans', sans-serif;
+  cursor: pointer; color: var(--ink-mid); transition: background 0.15s; margin-top: 0.5rem;
+}
+.btn-new:hover { background: var(--cream); }
+
+@media (max-width: 480px) {
+  .setup-grid { grid-template-columns: 1fr; }
+  .grid { grid-template-columns: 1fr; }
+  .fc.wide { grid-column: 1; }
+  body { padding: 1.2rem 0.8rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- SETUP -->
+<div id="s-setup" class="screen active">
+  <div class="logo-mark">✦ Método SIM</div>
+  <h1 class="screen-title">Anamnese Inteligente</h1>
+  <p class="screen-sub">Preencha os campos abaixo para iniciar. A IA conduzirá uma conversa de anamnese orientada pela Medicina Tradicional Chinesa.</p>
+  <div class="notice-box">
+    <strong>Como funciona:</strong> Você responde perguntas sobre seus sintomas. A IA — alimentada com o conteúdo de MTC da Gabi — vai aprofundando as perguntas. No final, uma ficha clínica completa é enviada automaticamente para a Gabi analisar antes da sua consulta.
+  </div>
+  <div class="setup-row">
+    <label class="field-lbl">Seu nome completo</label>
+    <input type="text" id="patient-name" placeholder="Como você prefere ser chamado(a)?">
+  </div>
+  <div class="setup-row">
+    <label class="field-lbl">Seu e-mail (opcional — para receber uma cópia da ficha)</label>
+    <input type="email" id="patient-email" placeholder="seuemail@exemplo.com">
+  </div>
+  <div class="setup-grid">
+    <div>
+      <label class="field-lbl">Área de maior interesse</label>
+      <select id="focus">
+        <option value="geral">Saúde geral (MTC completo)</option>
+        <option value="digestivo">Digestão e peso</option>
+        <option value="emocional">Emocional e ansiedade</option>
+        <option value="feminino">Saúde feminina</option>
+        <option value="energia">Energia e vitalidade</option>
+      </select>
+    </div>
+    <div>
+      <label class="field-lbl">Como você está hoje?</label>
+      <select id="mood">
+        <option value="bem">Bem, mas com dúvidas</option>
+        <option value="desanimado">Cansado ou desanimado</option>
+        <option value="ansioso">Ansioso ou agitado</option>
+        <option value="dor">Com dor ou desconforto</option>
+      </select>
+    </div>
+  </div>
+  <button class="btn-primary" onclick="startChat()">Iniciar minha anamnese →</button>
+  <p class="err" id="err">Por favor, informe seu nome para continuar.</p>
+</div>
+
+<!-- CHAT -->
+<div id="s-chat" class="screen">
+  <div class="chat-header">
+    <div class="avatar-ring">✦</div>
+    <div class="chat-head-info">
+      <h2>Anamnese · Método SIM</h2>
+      <p>Responda com calma — não há resposta certa ou errada</p>
+    </div>
+  </div>
+  <div class="prog-track"><div class="prog-bar" id="prog" style="width:4%"></div></div>
+  <div class="prog-txt" id="prog-lbl">Início da conversa</div>
+  <div class="msgs" id="msgs"></div>
+  <div class="input-row">
+    <textarea id="chat-in" rows="1" placeholder="Escreva aqui sua resposta..." onkeydown="handleKey(event)"></textarea>
+    <button class="btn-send" id="btn-send" onclick="sendMsg()" aria-label="Enviar">↑</button>
+  </div>
+</div>
+
+<!-- REPORT -->
+<div id="s-report" class="screen">
+  <div class="rep-top">
+    <div class="logo-mark">✦ Método SIM · Ficha Clínica</div>
+    <h1>Anamnese concluída</h1>
+    <p id="rep-date">—</p>
+    <div class="rep-actions">
+      <button class="btn-outline" onclick="copyRep()">↓ Copiar ficha</button>
+      <button class="btn-outline" onclick="window.print()">⎙ Imprimir</button>
+    </div>
+  </div>
+  <div id="send-status" class="send-status sending" style="display:none"></div>
+  <div class="divider"></div>
+  <div class="sec-lbl">Narrativa clínica</div>
+  <div class="narrative" id="rep-narrative">—</div>
+  <div class="sec-lbl">Ficha estruturada</div>
+  <div class="grid" id="rep-fields"></div>
+  <div class="sec-lbl">Indicações terapêuticas preliminares</div>
+  <div class="grid" id="rep-tx"></div>
+  <button class="btn-new" onclick="restart()">↺ Nova anamnese</button>
+</div>
+
+</div>
+
+<script>
+// ── EmailJS ──────────────────────────────────────────────
+emailjs.init('q2-Tx8ff0Oh76VpSZ');
+const EJ_SERVICE  = 'service_846525k';
+const EJ_TEMPLATE = 'template_ai77otn';
+
+// ── Base de conhecimento MTC ─────────────────────────────
+const MTC_BASE = `
+MEDICINA TRADICIONAL CHINESA — BASE CLÍNICA (material Gabi Andrioli / Método SIM)
+
+INTERROGATÓRIO MTC:
+Queixa principal: quando começou, há quanto tempo, causa provável, tratamentos anteriores, melhora/piora com temperatura, horário, alimentação, atividade, repouso, estações, aspectos psicoemocionais.
+
+DORES:
+- Dor fixa: estase de frio, umidade, calor, sangue ou qi
+- Dor migratória: vento
+- Dor em queimação: calor ou def. yin
+- Dor em pontada/facada: estase de sangue
+- Dor em distensão: estase de qi
+- Dor com sensação de vazio: deficiência
+- Dor surda contínua: yang não mantém circulação
+- Melhora com pressão: deficiência; piora com pressão: excesso
+- Melhora com calor: frio ou deficiência; melhora com frio: calor
+- Piora à noite: def. yin/sangue; piora de manhã: def. yang
+
+DIGESTÃO:
+- Falta de apetite: def. qi do baço
+- Fome excessiva: fogo do estômago
+- Distensão após comer: def. yang do baço ou retenção de alimentos
+- Piora ao comer: fogo do estômago, mucosidade, retenção de alimentos
+- Melhora ao comer: def. yin do estômago
+- Constipação ressecada: calor no IG ou def. yin/sangue
+- Diarreia com fezes moles: def. yang do baço
+- Refluxo/azia: calor no estômago, estagnação do qi do fígado
+
+SONO:
+- Não consegue entrar no sono: def. qi do coração
+- Agitação noturna: def. yin do coração
+- Acorda no meio da noite: def. sangue do coração
+- Sonhos perturbados/mórbidos: def. sangue do coração
+- Sonhos agitados e muitos: def. yin do coração
+
+URINA:
+- Frequente, clara e abundante: def. yang do rim
+- Escassa e escura: calor/umidade-calor
+- Ardência e urgência: umidade-calor na bexiga
+- Incontinência: def. qi do rim
+
+SEDE E BOCA:
+- Sede com desejo de frio: calor por excesso
+- Boca seca à noite: def. yin
+- Desejo por bebidas quentes: frio/def. yang
+- Gosto amargo: calor no fígado/vesícula biliar
+- Gosto doce/pegajoso: umidade-calor no baço
+
+ENERGIA:
+- Fadiga que piora de manhã: def. yang do baço
+- Fadiga com sensação de peso: umidade/mucosidade
+- Fadiga com frio nas extremidades: def. yang do rim
+- Fadiga com calor à tarde: def. yin do rim
+
+ASPECTOS EMOCIONAIS:
+- Raiva/irritabilidade: estagnação qi do fígado, fogo do fígado
+- Ansiedade/agitação: def. yin do coração, fogo do coração
+- Medo/sobressalto: def. yang do rim
+- Tristeza/melancolia: def. qi do pulmão, def. sangue do coração
+- Preocupação excessiva: def. qi do baço
+
+CALOR/FRIO:
+- Frio geral, extremidades frias: def. yang (rim, coração, baço)
+- Calor à tarde/noite, suor noturno: def. yin do rim
+- Febre vespertina + transpiração noturna: def. yin
+
+PADRÕES DO CORAÇÃO:
+Def. Qi do Coração: palpitação no esforço, ansiedade vaga, insônia (não entra no sono), memória fraca, palidez, transpiração espontânea fria, apatia, sensação sufocante.
+Def. Yang do Coração: tudo acima + mais frio, extremidades cianóticas, depressão clínica.
+Def. Sangue do Coração: palpitação constante, ansiedade com inadequação, insônia com sonhos mórbidos, palidez, pele seca, queda de cabelo, unhas fracas.
+Def. Yin do Coração: palpitação noturna/aceleramento, agitação, insônia, febre vespertina, transpiração noturna, boca seca à noite, rubor malar, síndrome do pânico.
+
+PADRÕES DO FÍGADO:
+Estagnação do Qi do Fígado: irritabilidade, suspiros frequentes, distensão nos hipocôndrios/peito, TPM, irregularidade menstrual.
+Ascensão do Fogo do Fígado: raiva intensa, cefaleia lateral pulsátil, face e olhos vermelhos, gosto amargo, zumbido agudo.
+Def. Sangue do Fígado: visão embaçada, câimbras noturnas, pele e unhas ressecadas, queda de cabelo, menstruação escassa.
+Def. Yin do Fígado + Yang do Fígado: tontura, cefaleia pulsátil, zumbido, irritabilidade, calor nas palmas/plantas.
+
+PADRÕES DO BAÇO:
+Def. Qi do Baço: fadiga, distensão pós-refeição, fezes amolecidas, falta de apetite, membros pesados, palidez amarelada.
+Def. Yang do Baço: tudo acima + mais frio, membros frios, diarreia matinal, edemas, desejo de alimentos quentes.
+
+PADRÕES DO RIM:
+Def. Yang do Rim: urina clara e abundante, nictúria, frio lombar e joelhos, extremidades frias, fadiga, libido baixa, edemas.
+Def. Yin do Rim: lombar fraca, tontura, zumbido grave, calor nas palmas/plantas/peito, suor noturno, boca seca à noite, memória fraca.
+
+PADRÕES DO PULMÃO:
+Def. Yang do Pulmão: tosse fraca, voz baixa, respiração curta, fadiga, transpiração espontânea, propensão a resfriados.
+Def. Yin do Pulmão: tosse seca, boca/garganta secas, febre vespertina, transpiração noturna.
+
+FITOTERAPIA:
+Coração (def. qi/yang): Si Jun Zi Tang, Bao Yuan Tang, Bu Xin Wan, Ding Zhi Wan, Zhi Gan Cao Tang
+Coração (def. sangue): Si Wu Tang, Ba Zhen Tang, Gui Pi Tang, Suan Zao Ren Tang
+Fígado (estagnação qi): Chai Hu Shu Gan San, Xiao Yao San
+Baço (def. qi/yang): Si Jun Zi Tang, Liu Jun Zi Tang, Li Zhong Wan
+Rim (def. yang): Jin Gui Shen Qi Wan; Rim (def. yin): Liu Wei Di Huang Wan
+
+DIETOTERAPIA:
+Frio/def. yang: alimentos quentes, cozidos, gengibre, canela; evitar crus/gelados/laticínios
+Calor/def. yin: alimentos frescos, verduras, peixe; evitar fritos, apimentados, álcool
+Def. sangue: beterraba, espinafre, figo, tâmara; caldos nutritivos
+Mucosidade/umidade: grãos integrais, cevada; evitar açúcar, laticínios, frituras
+Estagnação qi: cúrcuma, açafrão; horários regulares de refeição
+`;
+
+// ── Estado ───────────────────────────────────────────────
+const MAX_Q = 10;
+let qCount = 0, history = [], busy = false;
+let patientName = '', patientEmail = '', focus = 'geral';
+let reportData = null;
+
+// ── Sistema prompt ───────────────────────────────────────
+function sysPrompt() {
+  const focusMap = {
+    geral:      'Conduza uma anamnese completa abrangendo todos os sistemas.',
+    digestivo:  'Foque especialmente no sistema digestivo: baço, estômago, intestinos, apetite, fezes, digestão.',
+    emocional:  'Foque especialmente no aspecto psicoemocional: humor, emoções, padrões de coração e fígado.',
+    feminino:   'Foque especialmente na saúde feminina: ciclo menstrual, histórico ginecológico, sinais de sangue e yin.',
+    energia:    'Foque especialmente nos níveis de energia, frio/calor corporal, urina, lombar, padrões de rim e yang.'
+  };
+  return `Você é um assistente clínico do Método SIM (Saúde Integral Milenar) da Gabi Andrioli, especializado em Medicina Tradicional Chinesa, saúde integrativa, dietoterapia e fitoterapia chinesa.
+
+USE EXCLUSIVAMENTE o seguinte conteúdo como base:
+${MTC_BASE}
+
+REGRAS:
+1. Faça UMA pergunta por vez, de forma empática, acolhedora e com linguagem simples (sem jargão técnico).
+2. ${focusMap[focus]}
+3. Explore progressivamente: comece pela queixa principal e aprofunde conforme as respostas.
+4. Investigue: localização e qualidade da dor, horários, relação com alimentação, temperatura, emoções, sono, energia, urina, fezes, ciclo menstrual se pertinente.
+5. Após ${MAX_Q} trocas ou quando tiver informações suficientes, escreva SOMENTE: ANAMNESE_COMPLETA
+6. NUNCA dê diagnósticos, prescrições ou recomendações ao paciente.
+7. Se houver sinais de emergência médica, oriente a buscar atendimento imediato.
+8. A primeira mensagem que você recebe é "Iniciar". Comece cumprimentando ${patientName} pelo nome, apresentando-se brevemente como assistente do Método SIM da Gabi Andrioli, e perguntando qual é a principal queixa ou o que mais incomoda hoje.`;
+}
+
+// ── API Anthropic ────────────────────────────────────────
+const ANTHROPIC_KEY = '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';
+
+async function callAPI(msgs, sys) {
+  const r = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': ANTHROPIC_KEY,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 800, system: sys, messages: msgs })
+  });
+  const d = await r.json();
+  return d.content?.map(b => b.text||'').join('') || '';
+}
+
+// ── Envio de e-mail via EmailJS ──────────────────────────
+async function sendEmail(data) {
+  const fichaTexto = [
+    'PACIENTE: ' + (data.nome_paciente||'—'),
+    'QUEIXA PRINCIPAL: ' + (data.queixa_principal||'—'),
+    'INÍCIO DOS SINTOMAS: ' + (data.inicio_sintomas||'—'),
+    'SINTOMAS PRINCIPAIS: ' + (data.sintomas_principais||'—'),
+    'PADRÃO FRIO/CALOR: ' + (data.padrao_frio_calor||'—'),
+    'SISTEMAS AFETADOS: ' + (data.sistemas_afetados||'—'),
+    'PADRÕES MTC SUSPEITOS: ' + (data.padroes_mtc_suspeitos||'—'),
+    'ASPECTO EMOCIONAL: ' + (data.aspecto_emocional||'—'),
+    'SONO: ' + (data.sono||'—'),
+    'DIGESTÃO: ' + (data.digestao||'—'),
+    'ENERGIA: ' + (data.energia||'—'),
+    'HÁBITOS RELEVANTES: ' + (data.habitos_relevantes||'—'),
+    'FITOTERAPIA (avaliar): ' + (data.indicacoes_fitoterapia||'—'),
+    'DIETOTERAPIA (avaliar): ' + (data.indicacoes_dietoterapia||'—'),
+    'PONTOS DE ATENÇÃO: ' + (data.pontos_atencao||'—'),
+    'OBSERVAÇÕES: ' + (data.observacoes||'—'),
+  ].join('\n');
+
+  const params = {
+    nome_paciente:  data.nome_paciente || patientName,
+    email_paciente: patientEmail || 'não informado',
+    data:           new Date().toLocaleString('pt-BR'),
+    narrativa:      data.narrativa_clinica || '—',
+    ficha_completa: fichaTexto,
+  };
+
+  return emailjs.send(EJ_SERVICE, EJ_TEMPLATE, params);
+}
+
+// ── Fluxo principal ──────────────────────────────────────
+function startChat() {
+  patientName  = document.getElementById('patient-name').value.trim();
+  patientEmail = document.getElementById('patient-email').value.trim();
+  if (!patientName) { document.getElementById('err').style.display='block'; return; }
+  document.getElementById('err').style.display='none';
+  focus = document.getElementById('focus').value;
+  qCount = 0; history = []; reportData = null;
+  document.getElementById('msgs').innerHTML = '';
+  show('chat'); firstQ();
+}
+
+async function firstQ() {
+  addTyping();
+  const reply = await callAPI([{ role:'user', content:'Iniciar' }], sysPrompt());
+  removeTyping();
+  history.push({ role:'assistant', content:reply });
+  addMsg('ai', reply); updateProg();
+}
+
+async function sendMsg() {
+  if (busy) return;
+  const ta  = document.getElementById('chat-in');
+  const txt = ta.value.trim();
+  if (!txt) return;
+  ta.value=''; ta.style.height='auto';
+  history.push({ role:'user', content:txt });
+  addMsg('user', txt);
+  qCount++;
+  busy = true;
+  document.getElementById('btn-send').disabled = true;
+  addTyping();
+  try {
+    const msgs  = history.map(m => ({ role:m.role, content:m.content }));
+    const reply = await callAPI(msgs, sysPrompt());
+    removeTyping();
+    history.push({ role:'assistant', content:reply });
+    if (reply.trim() === 'ANAMNESE_COMPLETA') {
+      addMsg('ai', 'Obrigada por compartilhar tudo isso, ' + patientName + '! Estou preparando sua ficha clínica e enviando para a Gabi...');
+      setTimeout(genReport, 1200);
+    } else { addMsg('ai', reply); }
+  } catch(e) {
+    removeTyping();
+    addMsg('ai', 'Ocorreu um problema de conexão. Por favor, tente novamente.');
+  }
+  busy = false;
+  document.getElementById('btn-send').disabled = false;
+  updateProg();
+}
+
+async function genReport() {
+  addTyping();
+  const conv = history.map(m => (m.role==='user' ? patientName : 'Assistente') + ': ' + m.content).join('\n');
+  const prompt = `Analise esta conversa de anamnese clínica em MTC e gere um relatório para a profissional Gabi Andrioli. Responda SOMENTE com JSON válido (sem markdown, sem texto extra):
+
+${conv}
+
+JSON:
+{
+  "nome_paciente": "...",
+  "queixa_principal": "...",
+  "inicio_sintomas": "...",
+  "sintomas_principais": "...",
+  "padrao_frio_calor": "...",
+  "sistemas_afetados": "...",
+  "padroes_mtc_suspeitos": "...",
+  "aspecto_emocional": "...",
+  "sono": "...",
+  "digestao": "...",
+  "energia": "...",
+  "habitos_relevantes": "...",
+  "indicacoes_fitoterapia": "...",
+  "indicacoes_dietoterapia": "...",
+  "narrativa_clinica": "Parágrafo técnico completo em linguagem de MTC para análise da profissional.",
+  "pontos_atencao": "...",
+  "observacoes": "..."
+}`;
+  try {
+    const raw  = await callAPI([{ role:'user', content:prompt }], 'Você responde apenas com JSON válido, sem markdown, sem texto adicional.');
+    removeTyping();
+    reportData = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    renderReport(reportData);
+    // Envia e-mail após renderizar
+    sendEmailFlow(reportData);
+  } catch(e) {
+    removeTyping(); renderFallback();
+  }
+}
+
+async function sendEmailFlow(data) {
+  const statusEl = document.getElementById('send-status');
+  statusEl.style.display = 'block';
+  statusEl.className = 'send-status sending';
+  statusEl.textContent = '✦ Enviando ficha para a Gabi...';
+  try {
+    await sendEmail(data);
+    statusEl.className = 'send-status success';
+    statusEl.textContent = '✓ Ficha enviada com sucesso para a Gabi! Ela entrará em contato em breve.';
+  } catch(e) {
+    statusEl.className = 'send-status error';
+    statusEl.textContent = '⚠ Não foi possível enviar o e-mail automaticamente. Por favor, use o botão "Copiar ficha" e envie manualmente.';
+  }
+}
+
+// ── Renderização ─────────────────────────────────────────
+function renderReport(d) {
+  document.getElementById('rep-date').textContent = 'Gerada em ' + new Date().toLocaleString('pt-BR') + ' · Método SIM';
+  document.getElementById('rep-narrative').textContent = d.narrativa_clinica || '—';
+  fillGrid('rep-fields', [
+    { l:'Paciente',              v: d.nome_paciente },
+    { l:'Queixa principal',      v: d.queixa_principal,      w:true },
+    { l:'Início dos sintomas',   v: d.inicio_sintomas },
+    { l:'Padrão frio/calor',     v: d.padrao_frio_calor },
+    { l:'Sintomas principais',   v: d.sintomas_principais,   w:true },
+    { l:'Sistemas afetados',     v: d.sistemas_afetados,     w:true },
+    { l:'Padrões MTC suspeitos', v: d.padroes_mtc_suspeitos, w:true },
+    { l:'Aspecto emocional',     v: d.aspecto_emocional },
+    { l:'Sono',                  v: d.sono },
+    { l:'Digestão',              v: d.digestao },
+    { l:'Energia',               v: d.energia },
+    { l:'Hábitos relevantes',    v: d.habitos_relevantes,    w:true },
+    { l:'Pontos de atenção',     v: d.pontos_atencao,        w:true },
+  ]);
+  fillGrid('rep-tx', [
+    { l:'Fitoterapia (avaliar)',   v: d.indicacoes_fitoterapia,  w:true },
+    { l:'Dietoterapia (avaliar)',  v: d.indicacoes_dietoterapia, w:true },
+    { l:'Observações',            v: d.observacoes,             w:true },
+  ]);
+  show('report');
+}
+
+function renderFallback() {
+  const txt = history.filter(m=>m.role==='user').map(m=>m.content).join('; ');
+  document.getElementById('rep-date').textContent = new Date().toLocaleString('pt-BR');
+  document.getElementById('rep-narrative').textContent = txt;
+  fillGrid('rep-fields', [{ l:'Histórico', v:txt, w:true }]);
+  fillGrid('rep-tx', []);
+  show('report');
+}
+
+function fillGrid(id, items) {
+  const g = document.getElementById(id); g.innerHTML='';
+  items.forEach(it => {
+    const d = document.createElement('div');
+    d.className = 'fc' + (it.w?' wide':'');
+    d.innerHTML = '<div class="fc-l">'+it.l+'</div><div class="fc-v">'+esc(it.v||'—')+'</div>';
+    g.appendChild(d);
+  });
+}
+
+// ── Helpers ──────────────────────────────────────────────
+function addMsg(role, text) {
+  const c = document.getElementById('msgs');
+  const d = document.createElement('div');
+  d.className = 'msg' + (role==='user'?' user':'');
+  const ico = role==='user' ? patientName.charAt(0).toUpperCase() : '✦';
+  d.innerHTML = '<div class="mavt">'+ico+'</div><div class="mbub">'+esc(text)+'</div>';
+  c.appendChild(d); c.scrollTop = c.scrollHeight;
+}
+function addTyping() {
+  const c = document.getElementById('msgs');
+  const d = document.createElement('div');
+  d.className='msg'; d.id='typing';
+  d.innerHTML='<div class="mavt">✦</div><div class="mbub typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
+  c.appendChild(d); c.scrollTop = c.scrollHeight;
+}
+function removeTyping() { const e=document.getElementById('typing'); if(e) e.remove(); }
+function updateProg() {
+  const p = Math.min(5+(qCount/MAX_Q)*90, 95);
+  document.getElementById('prog').style.width = Math.round(p)+'%';
+  document.getElementById('prog-lbl').textContent = qCount+' de '+MAX_Q+' perguntas';
+}
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('s-'+id).classList.add('active');
+}
+function handleKey(e) {
+  if (e.key==='Enter'&&!e.shiftKey) { e.preventDefault(); sendMsg(); }
+  const ta=document.getElementById('chat-in');
+  ta.style.height='auto'; ta.style.height=Math.min(ta.scrollHeight,110)+'px';
+}
+function esc(t) {
+  return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+function copyRep() {
+  const n  = document.getElementById('rep-narrative').textContent;
+  const fs = Array.from(document.querySelectorAll('.fc'))
+    .map(f => f.querySelector('.fc-l').textContent+': '+f.querySelector('.fc-v').textContent)
+    .join('\n');
+  navigator.clipboard.writeText('FICHA CLÍNICA · MÉTODO SIM · Gabi Andrioli\n\nNARRATIVA:\n'+n+'\n\nCAMPOS:\n'+fs);
+}
+function restart() { show('setup'); }
+</script>
+</body>
+</html>
 
